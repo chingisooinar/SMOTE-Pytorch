@@ -11,7 +11,7 @@ import random
 class SMOTE(object):
     
     def __init__(self,distance,dims,k):
-        super(SMOTE1,self).__init__()
+        super(SMOTE,self).__init__()
         self.newindex = 0 
         self.k = k
         self.dims = dims
