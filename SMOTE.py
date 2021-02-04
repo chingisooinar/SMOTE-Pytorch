@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Feb  4 10:26:32 2021
+
+@author: nuvilabs
+"""
+import torch
+from random import randint
+import random
+class SMOTE(object):
+    
+    def __init__(self,distance,dims,k):
+        super(SMOTE1,self).__init__()
+        self.newindex = 0 
+        self.k = k
+        self.dims = dims
+        self.distance_measure = distance
+        
+    def populate(self, N,i,nnarray,min_samples,k):
+        while N:
+            nn = randint(0, k-2)
+            
+            diff = min_samples[nnarray[nn]] - min_samples[i]
+            gap = random.uniform(0,1)
+
+            self.synthetic_arr[self.newindex,:] = min_samples[i] + gap * diff
+            
+            self.newindex += 1
+            
+            N -= 1
+    def k_neighbors(self, euclid_distance, k):
+        nearest_idx = torch.zeros((euclid_distance.shape[0],euclid_distance.shape[0]), dtype = torch.int64)
+        
+        idxs = torch.argsort(euclid_distance, dim=1)
+        nearest_idx[:,:] = idxs
+        
+        return nearest_idx[:,1:k]
+    
+    def find_k(self,X,k):
+        euclid_distance = torch.zeros((X.shape[0],X.shape[0]), dtype = torch.float32)
+        
+        for i in range(len(X)):
+            dif = (X - X[i])**2
+            dist = torch.sqrt(dif.sum(axis=1))
+            euclid_distance[i] = dist
+            
+        return self.k_neighbors(euclid_distance,k)
+    
+    def generate(self, min_samples, N,k):
+        T = min_samples.shape[0]
+        self.synthetic_arr = torch.zeros(int(N/100)*T,self.dims)
+        N = int(N/100)
+        if self.distance_measure == 'euclidian':
+            indices = self.find_k(min_samples,k)
+            
+        for i in range(indices.shape[0]):
+            self.populate(N, i, indices[i], min_samples, k)
+        self.newindex = 0 
+        return self.synthetic_arr
+            
+    def fit_generate(self,X,y):
+        occ = torch.eye(int(y.max()+1),int(y.max()+1))[y].sum(axis=0)
+        dominant_class = torch.argmax(occ)
+        n_occ = int(occ[dominant_class].item())
+        for i in range(len(occ)):
+            if i != dominant_class:
+                N = (n_occ - occ[i]) * 100 / occ[i]
+                candidates = X[y == i]
+                xs = self.generate(candidates, N,self.k)
+                X = torch.cat((X,xs))
+                ys = torch.ones(xs.shape[0]) * i
+                y = torch.cat((y,ys))
+        return X,y
+        
+        
+        
+            
