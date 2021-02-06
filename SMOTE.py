@@ -9,8 +9,7 @@ import torch
 from random import randint
 import random
 class SMOTE(object):
-    
-    def __init__(self,distance,dims,k):
+    def __init__(self,distance='euclidian',dims=512,k=5):
         super(SMOTE,self).__init__()
         self.newindex = 0 
         self.k = k
@@ -48,12 +47,25 @@ class SMOTE(object):
         return self.k_neighbors(euclid_distance,k)
     
     def generate(self, min_samples, N,k):
+        """
+            Returns (N/100) * n_minority_samples synthetic minority samples.
+    		Parameters
+    		----------
+    		min_samples : Numpy_array-like, shape = [n_minority_samples, n_features]
+    		    Holds the minority samples
+    		N : percetange of new synthetic samples: 
+    		    n_synthetic_samples = N/100 * n_minority_samples. Can be < 100.
+    		k : int. Number of nearest neighbours. 
+    		Returns
+    		-------
+    		S : Synthetic samples. array, 
+    		    shape = [(N/100) * n_minority_samples, n_features]. 
+    	"""
         T = min_samples.shape[0]
         self.synthetic_arr = torch.zeros(int(N/100)*T,self.dims)
         N = int(N/100)
         if self.distance_measure == 'euclidian':
             indices = self.find_k(min_samples,k)
-            
         for i in range(indices.shape[0]):
             self.populate(N, i, indices[i], min_samples, k)
         self.newindex = 0 
