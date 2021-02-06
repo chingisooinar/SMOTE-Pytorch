@@ -72,11 +72,15 @@ class SMOTE(object):
         return self.synthetic_arr
             
     def fit_generate(self,X,y):
+        #get occurence of each class
         occ = torch.eye(int(y.max()+1),int(y.max()+1))[y].sum(axis=0)
+        #get the dominant class
         dominant_class = torch.argmax(occ)
+        #get occurence of the dominant class
         n_occ = int(occ[dominant_class].item())
         for i in range(len(occ)):
             if i != dominant_class:
+                #calculate the amount of synthetic data to generate
                 N = (n_occ - occ[i]) * 100 / occ[i]
                 candidates = X[y == i]
                 xs = self.generate(candidates, N,self.k)
